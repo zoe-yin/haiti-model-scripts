@@ -1,0 +1,19 @@
+!EvalModel
+    parameters: [c_xx, c_yy, c_zz, c_xy, c_yz, c_xz]
+    model: !Switch
+      [c_xx, c_yy, c_zz, c_xy, c_yz, c_xz]: !Any
+         components: !Any
+           - !ASAGI
+               file: /hppfs/scratch/01/di35poq/haiti-rupture-outputs/dynamic-relaxation-outputs/jobid_3422289/gridded_asagi_0.nc # Update path 
+               parameters: [c_xx, c_yy, c_zz, c_xy, c_yz, c_xz]
+               var: data
+               interpolation: linear   
+           - !ConstantMap
+             map:
+               c_xx: 0.0
+               c_yy: 0.0
+               c_zz: 0.0
+               c_xy: 0.0
+               c_yz: 0.0
+               c_xz: 0.0
+

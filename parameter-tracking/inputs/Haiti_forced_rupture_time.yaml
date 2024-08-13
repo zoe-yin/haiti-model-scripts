@@ -1,0 +1,21 @@
+!LuaMap
+  returns: [forced_rupture_time]
+  function: |
+      function f (x)
+        xha = {660316.8644347321, 2038874.3572128506, -10000.} 
+        r_crita = 2000.0
+        ra = math.sqrt((x["x"]-xha[1])^2 + (x["y"]-xha[2])^2 + (x["z"]-xha[3])^2 )
+        Vs = 3464.0
+        if (ra <= r_crita) then
+          forced_rupture_time =  ra/(0.7*Vs)+(0.081*r_crita/(0.7*Vs))*(1.0/(1.0-(ra/r_crita)^2)-1.0)
+        else
+          forced_rupture_time = 1000000000.0
+        end
+        return {
+          forced_rupture_time = forced_rupture_time
+        }
+      end
+# Change xha and r_crita
+# xha: coordinates of nucleation point
+# USGS Haiti M7.2 hypocenter (UTM): 660316.8644347321, 2038874.3572128506, -10 km
+#r_crita: size of the nucleation patch 

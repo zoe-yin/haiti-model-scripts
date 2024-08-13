@@ -1,0 +1,12 @@
+!Any    
+   components:
+     - !GroupFilter
+       groups: [65,66] # ! Change fault tag
+       components: !ConstantMap
+              map:
+                  alpha:  1.0  
+     - !GroupFilter
+       groups: [67,68,69,70] # ! Change fault tag
+       components: !ConstantMap
+              map:
+                  alpha:  0.0                   
