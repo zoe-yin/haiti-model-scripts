@@ -1,4 +1,3 @@
-import argparse
 import seissolxdmf
 import seissolxdmfwriter as sxw
 import numpy as np
@@ -20,20 +19,23 @@ def find_xdmffile_wahweap(jobid):
         xdmfFilename (string): full path to the extracted-fault.xdmf file matching the jobid
         example output: `/Users/hyin/agsd/projects/insar/2021_haiti/dynamic-rupture/data_tmp/dynamic-rupture/FL33-only/jobid_3440215/output_jobid_3440215_extracted-fault.xdmf`
     """
-
+    # Data base directory on hyin's Wahweap local storage. 
     datadir = '/Users/hyin/ags_local/data/haiti_seissol_data/'
 
     try:
     # Attempt to find and assign the first matching file
         xdmfFile = glob.glob(datadir + 'dynamic-rupture/*/jobid_'+jobid+'*/*extracted-fault.xdmf')[0]
+        momentCsvFile = glob.glob(datadir + 'dynamic-rupture/*/jobid_'+jobid+'*/output-energy.csv')[0]
+        print('Found file: ' + xdmfFile)
     except IndexError:
         # Handle the case where no files are found
         print(f"No matching file found for jobid {jobid}. Skipping...")
-        xdmfFile = None  # or handle it in another way if needed
-    # xdmfFile = glob.glob(datadir + 'dynamic-rupture/*/jobid_'+jobid+'/*extracted-fault.xdmf')[0]
-    print(xdmfFile)
-    momentCsvFile = glob.glob(datadir + 'dynamic-rupture/*/jobid_'+jobid+'*/output-energy.csv')[0]
-    return xdmfFile, momentCsvFile
+        xdmfFile = None
+        momentCsvFile = None  
+
+    # Extract the directory path and filename
+    jobdir, filename = os.path.split(xdmfFile)
+    return jobdir, xdmfFile, momentCsvFile
 
 def define_mu(jobdir):
 
@@ -76,14 +78,11 @@ def computeMw(label, time, moment_rate):
     return Mw
 
 
-
-
-def generateRMoment(jobid_list):
+def calcR(jobid_list):
     for i in range(len(jobid_list)):
         jobid = jobid_list[i]
         print('Working on JobID: ' + jobid)
-        xdmfFilename, momentCsvFile = find_xdmffile_wahweap(jobid)
-        jobdir = os.path.dirname(momentCsvFile)
+        jobdir, xdmfFilename, momentCsvFile = find_xdmffile_wahweap(jobid)
         sx = seissolxdmf.seissolxdmf(xdmfFilename)
 
         # x, y, z components of each point where the surface displacement is defined. 
@@ -140,6 +139,13 @@ def generateRMoment(jobid_list):
             backend="hdf5",
         )
 
+
+def compareMoment(jobid_list):
+    for i in range(len(jobid_list)):
+        jobid = jobid_list[i]
+        print('Working on JobID: ' + jobid)
+        jobdir, xdmfFilename, momentCsvFile = find_xdmffile_wahweap(jobid)
+
         # Set matplotlib parameters for consistent plotting
         ps = 8
         matplotlib.rcParams.update({"font.size": ps})
@@ -166,10 +172,6 @@ def generateRMoment(jobid_list):
 
         ax.plot(df.index.values, df["seismic_moment_rate"] / 1e19, cols_mainshock[0], label=f"{label} (Mw={Mw:.2f})")  # Plot moment rate
 
-        # Plot comparison data from Melgar et al., 2023 and USGS
-        # Melgar = np.loadtxt(f"../../ThirdParty/moment_rate_Melgar_et_al_mainshock.txt")
-        # ax.plot(Melgar[:, 0], Melgar[:, 1], "k", label="Melgar et al., 2023")
-
         usgs = np.loadtxt(f"/Users/hyin/ags_local/data/haiti_seissol_data/usgs-model/moment_rate.txt")
         ax.plot(usgs[:, 0], usgs[:, 1]/1e19, "k:", label="USGS")
 
@@ -191,19 +193,8 @@ def generateRMoment(jobid_list):
         print(f"Finished writing {fn}")
 
 
-
-# Set up argument parser
-parser = argparse.ArgumentParser(description='Process job IDs.')
-parser.add_argument('jobid_list', nargs='+', help='List of job IDs')
-
-# Parse arguments
-args = parser.parse_args()
-
-# Access jobid_list from command line
-jobid_list = args.jobid_list
-
-# Sample usage: 
-# python calc-moment-rate_R_modified.py 3491360 3491361
+jobid_list = ['3493207','3581175']
 
 
-generateRMoment(jobid_list)
+calcR(jobid_list)
+compareMoment(jobid_list)
